@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cgh_mask_designer"
+version = "0.1.0"
+description = "PyQt6 app to design micro-aperture hologram masks"
+authors = [{name="Your Name"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "PyQt6",
+  "numpy",
+]
