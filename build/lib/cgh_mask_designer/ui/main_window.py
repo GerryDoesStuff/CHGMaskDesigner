@@ -157,13 +157,14 @@ class MainWindow(QtWidgets.QMainWindow):
             nx = int(W / pitch_px); ny = int(H / pitch_px)
             cx0 = (W - (nx-1)*pitch_px)/2 if nx>1 else W/2
             cy0 = (H - (ny-1)*pitch_px)/2 if ny>1 else H/2
+            tar = normalize01(self.target)
             circles = []
             for j in range(ny):
                 for i in range(nx):
                     cx = cx0 + i*pitch_px; cy = cy0 + j*pitch_px
                     ix = int(round(cy)); iy = int(round(cx))
                     ix = max(0, min(H-1, ix)); iy = max(0, min(W-1, iy))
-                    val = float(self.target[ix, iy])
+                    val = float(tar[ix, iy])
                     d_um = self.st.min_hole_um + val*(self.st.max_hole_um - self.st.min_hole_um)
                     circles.append((cx*um_per_px, cy*um_per_px, 0.5*d_um))
             export_svg_circles(fn, circles)
