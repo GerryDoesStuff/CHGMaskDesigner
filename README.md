@@ -72,11 +72,26 @@ Export SVG for fabrication and JSON for reproducibility.
 
 ## Installation
 
-### Prerequisites
+### Requirements
 - Python 3.10 or newer.
-- `pip` (ships with modern Python distributions) and a virtual environment
-  tool such as `python -m venv` or `conda` are recommended so the
-  application's dependencies stay isolated from your system packages.
+- `pip` (bundled with current Python releases) to install the project.
+- Runtime dependencies installed automatically with the package:
+  - PyQt6
+  - numpy
+
+### Create and activate a virtual environment
+
+#### Windows (PowerShell)
+```powershell
+python -m venv .venv
+.\.venv\Scripts\activate
+```
+
+#### Unix-like shells (bash/zsh)
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
 
 ### Standard install
 ```bash
@@ -89,9 +104,10 @@ python -m pip install -e .
 ```
 
 ## Running
-```bash
-python -m cgh_mask_designer
-```
+1. Open a terminal in the project directory.
+2. Activate the virtual environment you created during installation.
+3. Run `python -m cgh_mask_designer`.
+4. Leave the terminal open while the GUI is running; closing it will end the session.
 
 The UI is powered by PyQt6. On Windows and macOS the required Qt libraries
 are bundled with the PyPI wheels. On Linux you may need the system's Qt
