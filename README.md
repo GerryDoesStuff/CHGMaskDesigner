@@ -70,8 +70,30 @@ Inspect mask and reconstruction in the previews; tweak parameters to balance spe
 
 Export SVG for fabrication and JSON for reproducibility.
 
-## Install (editable) and run
+## Installation
+
+### Prerequisites
+- Python 3.10 or newer.
+- `pip` (ships with modern Python distributions) and a virtual environment
+  tool such as `python -m venv` or `conda` are recommended so the
+  application's dependencies stay isolated from your system packages.
+
+### Standard install
 ```bash
-pip install -e .
+python -m pip install .
+```
+
+### Editable / development install
+```bash
+python -m pip install -e .
+```
+
+## Running
+```bash
 python -m cgh_mask_designer
 ```
+
+The UI is powered by PyQt6. On Windows and macOS the required Qt libraries
+are bundled with the PyPI wheels. On Linux you may need the system's Qt
+platform plugins (e.g., XCB/Wayland packages) available so the application
+can start.
