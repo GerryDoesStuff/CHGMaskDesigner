@@ -36,7 +36,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.target_panel = TargetPanel(self.st, self.maybe_auto)
         self.optics_panel = OpticsPanel(self.st, self.maybe_auto)
         self.encoding_panel = EncodingPanel(self.st, self.maybe_auto)
-        self.io_panel = IOPanel(self.st, self.export_json, self.import_json, self.export_svg, self.save_previews)
+        self.io_panel = IOPanel(
+            self.st,
+            self.export_json,
+            self.import_json,
+            self.export_svg,
+            self.export_reconstruction_svg,
+            self.save_previews,
+        )
 
         tabs.addTab(self.target_panel, "Target")
         tabs.addTab(self.optics_panel, "Optics")
@@ -176,6 +183,25 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             step = max(1, int(round(self.st.grid_pitch_um / um_per_px)))
             export_svg_pixels(fn, self.mask, um_per_px, step)
+
+    def export_reconstruction_svg(self):
+        fn, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            "Export reconstruction SVG",
+            "reconstruction.svg",
+            "SVG (*.svg)",
+        )
+        if not fn:
+            return
+        if self.recon.size == 0:
+            return
+        recon = np.asarray(self.recon, dtype=np.float32)
+        recon = recon - float(recon.min())
+        mx = float(recon.max())
+        if mx > 0:
+            recon = recon / mx
+        um_per_px = self.st.um_per_px
+        export_svg_pixels(fn, recon, um_per_px, step=1)
 
     def load_target(self):
         fn, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open target image", "", "Images (*.png *.jpg *.bmp *.tif *.svg)")
