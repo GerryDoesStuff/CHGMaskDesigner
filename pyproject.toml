@@ -14,3 +14,6 @@ dependencies = [
   "PyQt6-Qt6-Svg",
   "numpy",
 ]
+
+[tool.setuptools.packages.find]
+include = ["cgh_mask_designer"]
