@@ -128,6 +128,11 @@ class MainWindow(QtWidgets.QMainWindow):
         qs = QSettings("CGHMaskDesigner", "Main")
         qs.setValue("settings_json", self.st.to_json())
 
+    def closeEvent(self, event):
+        self.pull_settings()
+        self._save_qsettings()
+        super().closeEvent(event)
+
     def export_json(self):
         fn, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export settings", "settings.json", "JSON (*.json)")
         if fn:
@@ -216,6 +221,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def maybe_auto(self, *args):
         if self.auto_cb.isChecked():
             self.update_all()
+        elif self.sender() is self.auto_cb:
+            self.pull_settings()
+            self._save_qsettings()
 
     def update_all(self):
         self.pull_settings()
