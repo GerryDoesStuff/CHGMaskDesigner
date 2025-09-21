@@ -93,6 +93,13 @@ python -m pip install -e .
 python -m cgh_mask_designer
 ```
 
+### Windows helper script
+
+Windows users can double-click `run_cgh_mask_designer.cmd` (at the repository
+root) to create/activate a local `.venv`, install the package, and launch the
+application. The script leaves the command prompt window open after the
+application exits so any error messages remain visible.
+
 The UI is powered by PyQt6. On Windows and macOS the required Qt libraries
 are bundled with the PyPI wheels. On Linux you may need the system's Qt
 platform plugins (e.g., XCB/Wayland packages) available so the application
