@@ -17,6 +17,7 @@ class Settings:
     model: str = "Fourier"  # or "Fresnel"
     focal_len_mm: float = 200.0  # Fourier default (4f focal length)
     distance_mm: float = 200.0   # Fresnel propagation distance
+    recon_resolution: str = "Full pixel"  # "Full pixel" | "Sub-pixel"
 
     # Encoding
     encoding: str = "Binary Density"  # "Binary Density" | "Size Modulation" | "Grayscale Density"
