@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSettings
 import numpy as np
 
 from ..core.settings import Settings
@@ -114,7 +114,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.auto_cb.setChecked(st.auto_update)
 
     def _load_qsettings(self):
-        qs = QtWidgets.QSettings("CGHMaskDesigner", "Main")
+        qs = QSettings("CGHMaskDesigner", "Main")
         blob = qs.value("settings_json", "")
         if blob:
             try:
@@ -124,7 +124,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 pass
 
     def _save_qsettings(self):
-        qs = QtWidgets.QSettings("CGHMaskDesigner", "Main")
+        qs = QSettings("CGHMaskDesigner", "Main")
         qs.setValue("settings_json", self.st.to_json())
 
     def export_json(self):
