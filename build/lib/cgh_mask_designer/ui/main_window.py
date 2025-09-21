@@ -128,6 +128,11 @@ class MainWindow(QtWidgets.QMainWindow):
         qs = QSettings("CGHMaskDesigner", "Main")
         qs.setValue("settings_json", self.st.to_json())
 
+    def closeEvent(self, event):
+        self.pull_settings()
+        self._save_qsettings()
+        super().closeEvent(event)
+
     def export_json(self):
         fn, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Export settings", "settings.json", "JSON (*.json)")
         if fn:
@@ -204,10 +209,26 @@ class MainWindow(QtWidgets.QMainWindow):
                 painter.end()
             img = img.convertToFormat(QtGui.QImage.Format.Format_Grayscale8)
         else:
-            img = QtGui.QImage(fn)
-            if img.isNull(): return
-            img = img.convertToFormat(QtGui.QImage.Format.Format_Grayscale8)
-            img = img.scaled(self.st.width_px, self.st.height_px, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            src = QtGui.QImage(fn)
+            if src.isNull():
+                return
+            src = src.convertToFormat(QtGui.QImage.Format.Format_Grayscale8)
+            canvas = QtGui.QImage(self.st.width_px, self.st.height_px, QtGui.QImage.Format.Format_Grayscale8)
+            canvas.fill(Qt.GlobalColor.white)
+            scaled = src.scaled(
+                self.st.width_px,
+                self.st.height_px,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            painter = QtGui.QPainter(canvas)
+            try:
+                x = int((canvas.width() - scaled.width()) / 2)
+                y = int((canvas.height() - scaled.height()) / 2)
+                painter.drawImage(x, y, scaled)
+            finally:
+                painter.end()
+            img = canvas
         ptr = img.bits(); ptr.setsize(img.height()*img.bytesPerLine())
         arr = np.frombuffer(ptr, np.uint8).reshape((img.height(), img.bytesPerLine()))[:, :img.width()].copy()
         self.target = arr.astype(np.float32)/255.0
@@ -216,6 +237,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def maybe_auto(self, *args):
         if self.auto_cb.isChecked():
             self.update_all()
+        elif self.sender() is self.auto_cb:
+            self.pull_settings()
+            self._save_qsettings()
 
     def update_all(self):
         self.pull_settings()
