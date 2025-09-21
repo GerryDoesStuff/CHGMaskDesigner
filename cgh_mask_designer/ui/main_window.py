@@ -1,5 +1,6 @@
 from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QSettings
+from PyQt6.QtCore import Qt, QSettings, QRectF
+from PyQt6.QtSvg import QSvgRenderer
 import numpy as np
 
 from ..core.settings import Settings
@@ -171,12 +172,41 @@ class MainWindow(QtWidgets.QMainWindow):
             export_svg_pixels(fn, self.mask, um_per_px, step)
 
     def load_target(self):
-        fn, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open target image", "", "Images (*.png *.jpg *.bmp *.tif)")
+        fn, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open target image", "", "Images (*.png *.jpg *.bmp *.tif *.svg)")
         if not fn: return
-        img = QtGui.QImage(fn)
-        if img.isNull(): return
-        img = img.convertToFormat(QtGui.QImage.Format.Format_Grayscale8)
-        img = img.scaled(self.st.width_px, self.st.height_px, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        if fn.lower().endswith(".svg"):
+            renderer = QSvgRenderer(fn)
+            if not renderer.isValid():
+                return
+            img = QtGui.QImage(self.st.width_px, self.st.height_px, QtGui.QImage.Format.Format_ARGB32)
+            img.fill(Qt.GlobalColor.white)
+            painter = QtGui.QPainter(img)
+            try:
+                view_box = renderer.viewBoxF()
+                if view_box.isEmpty():
+                    default_size = renderer.defaultSize()
+                    view_box = QRectF(0, 0, default_size.width(), default_size.height())
+                if view_box.width() <= 0 or view_box.height() <= 0:
+                    target_rect = QRectF(0, 0, img.width(), img.height())
+                else:
+                    scale = min(img.width() / view_box.width(), img.height() / view_box.height())
+                    render_w = view_box.width() * scale
+                    render_h = view_box.height() * scale
+                    target_rect = QRectF(
+                        (img.width() - render_w) / 2.0,
+                        (img.height() - render_h) / 2.0,
+                        render_w,
+                        render_h,
+                    )
+                renderer.render(painter, target_rect)
+            finally:
+                painter.end()
+            img = img.convertToFormat(QtGui.QImage.Format.Format_Grayscale8)
+        else:
+            img = QtGui.QImage(fn)
+            if img.isNull(): return
+            img = img.convertToFormat(QtGui.QImage.Format.Format_Grayscale8)
+            img = img.scaled(self.st.width_px, self.st.height_px, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         ptr = img.bits(); ptr.setsize(img.height()*img.bytesPerLine())
         arr = np.frombuffer(ptr, np.uint8).reshape((img.height(), img.bytesPerLine()))[:, :img.width()].copy()
         self.target = arr.astype(np.float32)/255.0
