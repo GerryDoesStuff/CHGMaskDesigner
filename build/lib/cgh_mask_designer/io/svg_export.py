@@ -4,15 +4,17 @@ def export_svg_pixels(path: str, mask: np.ndarray, um_per_px: float, step: int =
     H, W = mask.shape
     width_um = W * um_per_px
     height_um = H * um_per_px
-    ys, xs = np.where(mask > 0.5)
+    ys, xs = np.nonzero(mask > 0)
+    coverages = mask[ys, xs]
     with open(path, 'w') as f:
         f.write("<?xml version='1.0' encoding='UTF-8'?>\n")
         f.write(f"<svg xmlns='http://www.w3.org/2000/svg' width='{width_um}um' height='{height_um}um' viewBox='0 0 {width_um} {height_um}'>\n")
         f.write("  <g fill='black' stroke='none'>\n")
-        for (y, x) in zip(ys[::step], xs[::step]):
+        for (y, x, cov) in zip(ys[::step], xs[::step], coverages[::step]):
             cx_um = x * um_per_px
             cy_um = y * um_per_px
-            r_um = 0.5 * um_per_px
+            cov = float(max(0.0, cov))
+            r_um = 0.5 * um_per_px * np.sqrt(cov)
             f.write(f"    <circle cx='{cx_um:.3f}' cy='{cy_um:.3f}' r='{r_um:.3f}' />\n")
         f.write("  </g>\n</svg>\n")
 
