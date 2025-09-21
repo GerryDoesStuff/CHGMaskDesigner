@@ -24,6 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.target = np.zeros((self.st.height_px, self.st.width_px), dtype=np.float32)
         self.mask = np.zeros_like(self.target)
         self.recon = np.zeros_like(self.target)
+        self.recon_um_per_px = float(self.st.um_per_px)
         self._build_ui()
         self._load_qsettings()
         self.update_all()
@@ -71,6 +72,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.target_panel.width_sb, self.target_panel.height_sb, self.target_panel.upp_dsb,
             self.target_panel.mask_w_dsb, self.target_panel.mask_h_dsb,
             self.optics_panel.model_cb, self.optics_panel.wl_dsb, self.optics_panel.focal_dsb, self.optics_panel.dist_dsb,
+            self.optics_panel.recon_res_cb,
             self.encoding_panel.enc_cb, self.encoding_panel.halftone_cb, self.encoding_panel.pitch_dsb,
             self.encoding_panel.minhole_dsb, self.encoding_panel.maxhole_dsb, self.encoding_panel.spot_dsb,
         ]:
@@ -94,6 +96,7 @@ class MainWindow(QtWidgets.QMainWindow):
         st.wavelength_nm = float(self.optics_panel.wl_dsb.value())
         st.focal_len_mm = float(self.optics_panel.focal_dsb.value())
         st.distance_mm = float(self.optics_panel.dist_dsb.value())
+        st.recon_resolution = self.optics_panel.recon_res_cb.currentText()
         st.encoding = self.encoding_panel.enc_cb.currentText()
         st.use_halftone = bool(self.encoding_panel.halftone_cb.isChecked())
         st.grid_pitch_um = float(self.encoding_panel.pitch_dsb.value())
@@ -113,6 +116,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.optics_panel.wl_dsb.setValue(st.wavelength_nm)
         self.optics_panel.focal_dsb.setValue(st.focal_len_mm)
         self.optics_panel.dist_dsb.setValue(st.distance_mm)
+        self.optics_panel.recon_res_cb.setCurrentText(st.recon_resolution)
         self.encoding_panel.enc_cb.setCurrentText(st.encoding)
         self.encoding_panel.halftone_cb.setChecked(st.use_halftone)
         self.encoding_panel.pitch_dsb.setValue(st.grid_pitch_um)
@@ -200,7 +204,7 @@ class MainWindow(QtWidgets.QMainWindow):
         mx = float(recon.max())
         if mx > 0:
             recon = recon / mx
-        um_per_px = self.st.um_per_px
+        um_per_px = getattr(self, "recon_um_per_px", float(self.st.um_per_px))
         export_svg_pixels(fn, recon, um_per_px, step=1)
 
     def load_target(self):
@@ -306,14 +310,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
         wl = self.st.wavelength_nm * 1e-9
         dx = self.st.um_per_px * 1e-6
+        oversample = self.st.recon_resolution == "Sub-pixel"
         if self.st.model == "Fourier":
-            recon = sim_fourier(mask_amp)
+            field, (dx_eff, dy_eff) = sim_fourier(mask_amp, dx, oversample=oversample)
         else:
             z = self.st.distance_mm * 1e-3
-            recon = sim_fresnel(mask_amp, wl, dx, dx, z)
+            field, (dx_eff, dy_eff) = sim_fresnel(mask_amp, wl, dx, dx, z, oversample=oversample)
 
         self.mask = np.clip(mask_amp, 0, 1)
-        self.recon = normalize01(recon)
+        recon_mag = np.abs(field)
+        self.recon = normalize01(recon_mag)
+        self.recon_um_per_px = float(0.5 * (dx_eff + dy_eff) * 1e6)
 
         self.prev_target.set_array(self.mask)
         self.prev_recon.set_array(self.recon)
